@@ -35,9 +35,7 @@ graph TD
     subgraph Sistemas ["INVENTARIO"]
         direction TB
         CargaApp ==>|Reserva| InvReserva[(Stock Comprometido)]
-        EmiteTick ==>|Baja Mercadería| InvFinal[(Stock Actualizado)]
-
-        EmiteTickDev -->|Devolución| InvFinal
+        EmiteTick ==>|Actualiza Stock| InvFinal[(Stock Actualizado)]
 
         %% Conexión de estados
         InvReserva -.->|Libera al vender| InvFinal
