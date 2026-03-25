@@ -3,13 +3,13 @@ graph TD
         direction TB
         Start((Inicio)) -->|Pedido| SolicitaPedido[Solicita Mercadería]
         RecibeProd[Recibe Mercadería]
-        RecibeProd --> DecidePago{Forma de Pago}
+        RecibeProd --> DecidePago{Medio de pago}
         DecidePago -->|Tarjeta| PagaTarjeta[Presenta Tarjeta]
         DecidePago -->|Efectivo| PagaEfectivo[Entrega Efectivo]
 
 
         EmiteTick((Devolución)) -->|Mercadería a devolver| SolicitaDevolucion[Solicita Devolución]
-        SolicitaDevolucion --> DecideDevolucion{Devolución}
+        SolicitaDevolucion --> DecideDevolucion{Medio de pago}
         DecideDevolucion -->|Tarjeta| DevolTarjeta[Devolución Tarjeta]
         DecideDevolucion -->|Efectivo| DevolEfectivo[Devolución Efectivo]
     end
@@ -24,15 +24,12 @@ graph TD
         PagaTarjeta -->|Procesar| TPV_Bank[TPV: Conexión Banco]
         PagaEfectivo -->|Cobrar| TPV_Caja[TPV: Apertura Cajón]
         
+        DevolTarjeta -->|Procesar| TPV_Bank
+        DevolEfectivo -->|Cobrar| TPV_Caja
+
         TPV_Bank --> EmiteTick[Emisión de Ticket]
         TPV_Caja --> EmiteTick
         EmiteTick --> End((Fin))
-
-        DevolTarjeta -->|Procesar| TPV_Bank[TPV: Conexión Banco]
-        DevolEfectivo -->|Cobrar| TPV_Caja[TPV: Apertura Cajón]
-        
-        TPV_Bank --> EmiteTickDev[Emisión de Ticket de devolución]
-        TPV_Caja --> EmiteTickDev
     end
 
     subgraph Sistemas ["INVENTARIO"]
