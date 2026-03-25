@@ -1,32 +1,33 @@
 graph TD
     subgraph Cliente ["👤 CLIENTE"]
         direction TB
-        Start((Inicio)) -->|1. Tienda| SolicitaPedido[Solicita Pedido]
+        Start((Inicio)) -->|1. Pedido| SolicitaPedido[Solicita Mercadería]
         RecibeProd[7. Recibe Mercadería]
-        PagaEfectivo[10. Paga en Efectivo] --> End((Fin))
+        RecibeProd --> DecidePago{8. Forma de Pago}
+        DecidePago -->|Tarjeta| PagaTarjeta[9a. Presenta Tarjeta]
+        DecidePago -->|Efectivo| PagaEfectivo[9b. Entrega Efectivo]
     end
 
     subgraph Vendedor ["🧑‍💼 VENDEDOR"]
         direction TB
-        SolicitaPedido -->|2. Toma pedido| CargaApp[3. Carga pedido en App]
-        CargaApp -.->|4. Confirmación| EntregaFisica[6. Entrega Física]
+        SolicitaPedido -->|2. Carga| CargaApp[3. Carga pedido en App]
+        CargaApp -->|4. Reserva| EntregaFisica[6. Entrega Física]
         EntregaFisica --> RecibeProd
-        RecibeProd -->|8. Inicia cobro| ProcesaPOS[9. Procesa en POS]
-        ProcesaPOS --> PagaEfectivo
-    end
 
-    subgraph Sistemas ["💻 SISTEMAS"]
-        direction TB
-        CargaApp ==> AppBD(App & Base de Datos)
-        AppBD ==> InvBD{GESTIÓN STOCK: Reservado}
-        InvBD -.-> CargaApp
-
-        ProcesaPOS ==> EmiteTick[Generar Ticket]
-        EmiteTick ==> InvBDFinal{STOCK: Baja Definitiva}
+        %% Lógica de Cobro según medio
+        PagaTarjeta -->|Procesar| TPV_Bank[10a. TPV: Conexión Banco]
+        PagaEfectivo -->|Cobrar| TPV_Caja[10b. TPV: Apertura Cajón]
         
-        PagaEfectivo -.-> Arqueo((Arqueo Caja))
+        TPV_Bank --> EmiteTick[11. Emisión de Ticket]
+        TPV_Caja --> EmiteTick
+        EmiteTick --> End((Fin))
     end
 
-    %% Enlaces de lógica
-    AppBD --- InvBD
-    EmiteTick --- InvBDFinal
+    subgraph Sistemas ["💻 INVENTARIO / APP"]
+        direction TB
+        CargaApp ==>|Reserva| InvReserva[(Stock Comprometido)]
+        EmiteTick ==>|Baja Real| InvFinal[(Baja Definitiva)]
+        
+        %% Conexión de estados
+        InvReserva -.->|Libera al vender| InvFinal
+    end
