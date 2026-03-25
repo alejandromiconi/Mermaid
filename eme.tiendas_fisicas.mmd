@@ -1,55 +1,32 @@
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#e1f5fe', 'edgeLabelBackground':'#ffffff', 'tertiaryColor': '#fff'}}}%%
 graph TD
-    %% Definición de Estilos para los Carriles (Simulando Swimlanes)
     subgraph Cliente ["👤 CLIENTE"]
         direction TB
-        Start((Inicio)) -->|1. Se presenta en tienda| SolicitaPedido[Solicita Pedido de Mercadería]
+        Start((Inicio)) -->|1. Tienda| SolicitaPedido[Solicita Pedido]
         RecibeProd[7. Recibe Mercadería]
         PagaEfectivo[10. Paga en Efectivo] --> End((Fin))
     end
 
-    subgraph Vendedor ["🧑‍💼 VENDEDOR / TIENDA"]
+    subgraph Vendedor ["🧑‍💼 VENDEDOR"]
         direction TB
         SolicitaPedido -->|2. Toma pedido| CargaApp[3. Carga pedido en App]
-        CargaApp -.->|4. Confirmación visual| EntregaFisica[6. Entrega Mercadería Físicamente]
+        CargaApp -.->|4. Confirmación| EntregaFisica[6. Entrega Física]
         EntregaFisica --> RecibeProd
-        RecibeProd -->|8. Inicia cobro| ProcesaPOS[9. Procesa venta en POS]
+        RecibeProd -->|8. Inicia cobro| ProcesaPOS[9. Procesa en POS]
         ProcesaPOS --> PagaEfectivo
     end
 
-    subgraph Sistemas ["💻 APP / INVENTARIO / POS"]
+    subgraph Sistemas ["💻 SISTEMAS"]
         direction TB
-        %% Conexiones con lógica de inventario
-        CargaApp ==>|**A. Carga datos**| AppBD(App & Base de Datos)
+        CargaApp ==> AppBD(App & Base de Datos)
+        AppBD ==> InvBD{GESTIÓN STOCK: Reservado}
+        InvBD -.-> CargaApp
+
+        ProcesaPOS ==> EmiteTick[Generar Ticket]
+        EmiteTick ==> InvBDFinal{STOCK: Baja Definitiva}
         
-        AppBD ==>|**B. Consulta y Reserva**| InvBD{**GESTIÓN STOCK**<br/>Estado: Reservado}
-        InvBD -.->|*Stock Comprometido*| CargaApp
-
-        ProcesaPOS ==>|**C. Emite Ticket**| EmiteTick[Generar Ticket Fiscal]
-        EmiteTick ==>|**D. Baja Existencia**| InvBDFinal{**ACTUALIZAR INVENTARIO**<br/>Estado: Baja Definitiva}
-        InvBDFinal -.->|*Stock Actualizado*| FinStock(( ))
-
-        PagaEfectivo -.->|**E. Registro Ingreso**| Arqueo((Arqueo Caja))
+        PagaEfectivo -.-> Arqueo((Arqueo Caja))
     end
 
-    %% Enlaces Transversales para Claridad
+    %% Enlaces de lógica
     AppBD --- InvBD
     EmiteTick --- InvBDFinal
-
-    %% Definición de Estilos Visuales
-    classDef actor fill:#f9f9f9,stroke:#333,stroke-width:1px,rx:5,ry:5;
-    classDef process fill:#e1f5fe,stroke:#0277bd,stroke-width:1.5px,rx:10,ry:10,color:#01579b;
-    classDef system fill:#e8f5e9,stroke:#2e7d32,stroke-width:1.5px,stroke-dasharray: 5 5,rx:5,ry:5,color:#1b5e20;
-    classDef db fill:#fff9c4,stroke:#fbc02d,stroke-width:1.5px,stroke-dasharray: 3 3,rx:15,ry:15,color:#f57f17;
-    classDef event fill:#fff,stroke:#333,stroke-width:2px,color:#000;
-
-    %% Asignación de Estilos
-    class Start,End event;
-    class SolicitaPedido,RecibeProd,PagaEfectivo,CargaApp,EntregaFisica,ProcesaPOS process;
-    class AppBD,InvBD,InvBDFinal,EmiteTick system;
-    class Arqueo,FinStock db;
-
-    %% Ajustes de diseño de flechas
-    linkStyle 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 stroke:#555,stroke-width:1.5px,fill:none;
-    linkStyle 3,5,10,12,14 stroke-dasharray: 3 3; %% Líneas de puntos para flujo de información
-    linkStyle 2,4,9,11 stroke-width:3px,stroke:#0277bd; %% Líneas gruesas para acciones clave de sistema
